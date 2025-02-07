@@ -2,7 +2,6 @@
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import requests
 
@@ -47,17 +46,7 @@ def toggle_cluster_state(
 
     switch_node_maintenance(maintainance_flag)
     update_revision_and_manager()
-
-    # TODO: move this from multiple places to one
-    try:
-        broadcast_successful = broadcast_new_config(config)
-    except Exception as err:
-        raise CMAPIBasicError(
-            'Error while distributing config file.'
-        ) from err
-
-    if not broadcast_successful:
-        raise CMAPIBasicError('Config distribution isn\'t successful.')
+    broadcast_new_config(config)
 
 
 class ClusterHandler():
@@ -189,16 +178,7 @@ class ClusterHandler():
             input_config_filename=config, output_config_filename=config
         )
 
-        try:
-            broadcast_successful = broadcast_new_config(config)
-        except Exception as err:
-            raise CMAPIBasicError(
-                'Error while distributing config file.'
-            ) from err
-
-        if not broadcast_successful:
-            raise CMAPIBasicError('Config distribution isn\'t successful.')
-
+        broadcast_new_config(config)
         logger.debug(f'Successfully finished adding node {node}.')
         return response
 
@@ -242,17 +222,7 @@ class ClusterHandler():
             update_revision_and_manager(
                 input_config_filename=config, output_config_filename=config
             )
-            try:
-                broadcast_successful = broadcast_new_config(
-                    config, nodes=active_nodes
-                )
-            except Exception as err:
-                raise CMAPIBasicError(
-                    'Error while distributing config file.'
-                ) from err
-            if not broadcast_successful:
-                raise CMAPIBasicError('Config distribution isn\'t successful.')
-
+            broadcast_new_config(config, nodes=active_nodes)
         logger.debug(f'Successfully finished removing node {node}.')
         return response
 
