@@ -1422,7 +1422,7 @@ struct DropTableStatement : public SqlStatement
   DropTableStatement() : fTableName(0)
   {
   }
-  EXPORT DropTableStatement(QualifiedName* qualifiedName, bool cascade);
+  EXPORT DropTableStatement(QualifiedName* qualifiedName, bool cascade, bool ifExists = false);
 
   /** @brief Dump to stdout. */
   EXPORT std::ostream& put(std::ostream& os) const;
@@ -1442,6 +1442,7 @@ struct DropTableStatement : public SqlStatement
 
   QualifiedName* fTableName;
   bool fCascade;
+  bool fIfExists;
 };
 
 /** @brief DebugStatement
