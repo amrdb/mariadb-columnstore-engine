@@ -248,6 +248,7 @@ void TupleHashJoinStep::trackMem(uint index)
     if (!joinIsTooBig &&
         (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
     {
+      assert(0);
       joinIsTooBig = true;
       ostringstream oss;
       oss << "(" << __LINE__ << ") "
@@ -450,6 +451,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
           return;
         if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
         {
+          assert(0);
           joinIsTooBig = true;
           ostringstream oss;
           oss << "(" << __LINE__ << ") "
@@ -864,6 +866,7 @@ void TupleHashJoinStep::hjRunner()
     if (joinIsTooBig && !status())
     {
       ostringstream oss;
+      assert(0);
       oss << "(" << __LINE__ << ") "
           << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
       fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
