@@ -486,6 +486,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
   }
   catch (...)
   {
+    assert(0);
     handleException(std::current_exception(), logging::ERR_EXEMGR_MALFUNCTION, logging::ERR_JOIN_TOO_BIG,
                     "TupleHashJoinStep::smallRunnerFcn()");
     status(logging::ERR_EXEMGR_MALFUNCTION);
@@ -786,6 +787,7 @@ void TupleHashJoinStep::hjRunner()
     }
     catch (...)
     {
+      assert(0);
       handleException(std::current_exception(), logging::ERR_EXEMGR_MALFUNCTION, logging::ERR_JOIN_TOO_BIG,
                       "TupleHashJoinStep::hjRunner()");
       status(logging::ERR_EXEMGR_MALFUNCTION);
