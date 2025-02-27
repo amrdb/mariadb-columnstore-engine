@@ -251,7 +251,7 @@ void TupleHashJoinStep::trackMem(uint index)
       assert(0);
       joinIsTooBig = true;
       ostringstream oss;
-      oss << "(" << __LINE__ << ") "
+      oss << "(3" << __LINE__ << ") "
           << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
       fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
       errorMessage(oss.str());
@@ -454,7 +454,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
           assert(0);
           joinIsTooBig = true;
           ostringstream oss;
-          oss << "(" << __LINE__ << ") "
+          oss << "(1" << __LINE__ << ") "
               << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
           fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
           errorMessage(oss.str());
@@ -869,7 +869,7 @@ void TupleHashJoinStep::hjRunner()
     {
       ostringstream oss;
       assert(0);
-      oss << "(" << __LINE__ << ") "
+      oss << "(2" << __LINE__ << ") "
           << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
       fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
       errorMessage(oss.str());
