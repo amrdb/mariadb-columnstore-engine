@@ -30,6 +30,8 @@
 #include <stdexcept>
 #include <unistd.h>
 // #define NDEBUG
+#undef NDEBUG
+
 #include <cassert>
 #include <algorithm>
 using namespace std;
