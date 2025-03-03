@@ -31,6 +31,7 @@
 #include <unistd.h>
 // #define NDEBUG
 #undef NDEBUG
+#include <assert.h>
 
 #include <cassert>
 #include <algorithm>
