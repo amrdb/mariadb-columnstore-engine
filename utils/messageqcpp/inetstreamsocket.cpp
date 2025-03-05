@@ -389,7 +389,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
         return false;
       else
         assert(0);
-        throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
+        //throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
     }
 
     if (stats)
