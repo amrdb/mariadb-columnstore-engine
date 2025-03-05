@@ -64,6 +64,9 @@ either expressed or implied, of the FreeBSD Project.
 #include <sys/types.h>
 #include <sys/time.h>
 #include <cstring>
+#include <cassert>
+#include <assert.h>
+
 
 #include <stdexcept>
 #include <string>
@@ -385,6 +388,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
       if (msecs < 0)
         return false;
       else
+        assert(0);
         throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
     }
 
