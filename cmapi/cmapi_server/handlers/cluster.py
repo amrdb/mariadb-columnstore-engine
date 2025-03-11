@@ -190,7 +190,9 @@ class ClusterHandler():
         )
 
         try:
-            broadcast_successful = broadcast_new_config(config)
+            broadcast_successful = broadcast_new_config(
+                config, distribute_secrets=True
+            )
         except Exception as err:
             raise CMAPIBasicError(
                 'Error while distributing config file.'
