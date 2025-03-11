@@ -9320,6 +9320,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
+  idblog("csep: " << csep->toString());
   return 0;
 }
 
