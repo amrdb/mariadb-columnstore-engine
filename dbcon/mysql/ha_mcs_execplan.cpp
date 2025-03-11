@@ -91,6 +91,25 @@ using namespace funcexp;
 
 #include "vlarray.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 const uint64_t AGG_BIT = 0x01;
 const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
@@ -9267,6 +9286,7 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
 #endif
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
+  idblog("csep: " << csep->toString());
   return 0;
 }
 
