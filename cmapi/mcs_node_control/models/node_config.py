@@ -9,7 +9,6 @@ from pathlib import Path
 from shutil import copyfile
 from xml.dom import minidom   # to pick up pretty printing functionality
 
-from cmapi_server.helpers import get_read_only_nodes
 from lxml import etree
 
 from cmapi_server.constants import (
@@ -576,6 +575,8 @@ has dbroot {subel.text}')
 
     def is_read_only(self, root=None) -> bool:
         """Checks if this node is in read-only mode"""
+        from cmapi_server.helpers import get_read_only_nodes # Avoid circular import
+
         read_only_nodes = set(get_read_only_nodes(root))
         my_names = set(self.get_network_addresses_and_names())
         return bool(read_only_nodes.intersection(my_names))

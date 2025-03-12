@@ -75,11 +75,11 @@ class ProgInfo(NamedTuple):
 # on top level of process handling
 # mcs-storagemanager starts conditionally inside mcs-loadbrm, but should be
 # stopped using cmapi
-ALL_MCS_PROGS = {
+ALL_MCS_PROGS: dict[str, ProgInfo] = {
     # workernode starts on primary and non primary node with 1 or 2 added
     # to subcommand (DBRM_Worker1 - on primary, DBRM_Worker2 - non primary)
     MCSProgs.STORAGE_MANAGER.name: ProgInfo(15, 'mcs-storagemanager', '', False, 1),
-    MCSProgs.WORKER_NODE: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
+    MCSProgs.WORKER_NODE.name: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
     MCSProgs.CONTROLLER_NODE.name: ProgInfo(11, 'mcs-controllernode', 'fg', True),
     MCSProgs.PRIM_PROC.name: ProgInfo(5, 'mcs-primproc', '', False, 1),
     MCSProgs.EXE_MGR.name: ProgInfo(9, 'mcs-exemgr', '', False, 1),
