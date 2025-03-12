@@ -837,7 +837,7 @@ def cmapi_config_check(cmapi_conf_path: str = CMAPI_CONF_PATH):
     """
     if not os.path.exists(cmapi_conf_path):
         logging.info(
-            f'There are no config file at "{cmapi_conf_path}". '
+            f'There is no config file at "{cmapi_conf_path}". '
             f'So copy default config from {CMAPI_DEFAULT_CONF_PATH} there.'
         )
         copyfile(CMAPI_DEFAULT_CONF_PATH, cmapi_conf_path)
