@@ -461,7 +461,7 @@ def get_config_parser(
     except PermissionError as e:
         # TODO: looks like it's useless here, because of creating config
         #       from default on cmapi server startup
-        #       Anyway looks like it have to raise error and then
+        #       Anyway looks like it has to raise error and then
         #       return 500 error
         logging.error(
             'CMAPI cannot create configuration file. '
