@@ -577,6 +577,7 @@ has dbroot {subel.text}')
         """Checks if this node is in read-only mode"""
         from cmapi_server.helpers import get_read_only_nodes # Avoid circular import
 
+        root = root or self.get_current_config_root()
         read_only_nodes = set(get_read_only_nodes(root))
         my_names = set(self.get_network_addresses_and_names())
         return bool(read_only_nodes.intersection(my_names))
