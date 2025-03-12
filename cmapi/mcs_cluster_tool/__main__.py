@@ -36,7 +36,13 @@ app.command(
 app.command(
     'dbrm_restore', rich_help_panel='Tools commands'
 )(restore_commands.dbrm_restore)
-app.command('cskeys', rich_help_panel='Tools commands')(tools_commands.cskeys)
+app.command(
+    'cskeys', rich_help_panel='Tools commands',
+    short_help=(
+        'Generates a random AES encryption key and init vector and writes '
+        'them to disk.'
+    )
+)(tools_commands.cskeys)
 app.command(
     'cspasswd', rich_help_panel='Tools commands'
 )(tools_commands.cspasswd)

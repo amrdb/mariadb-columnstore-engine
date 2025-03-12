@@ -18,6 +18,8 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 * `dbrm_backup`: Columnstore DBRM Backup.
 * `restore`: Restore Columnstore (and/or MariaDB) data.
 * `dbrm_restore`: Restore Columnstore DBRM data.
+* `cskeys`: Generates a random AES encryption key and init vector and writes them to disk.
+* `cspasswd`: Encrypt a Columnstore plaintext password...
 * `help-all`: Show help for all commands in man page style.
 * `status`: Get status information.
 * `stop`: Stop the Columnstore cluster.
@@ -71,7 +73,7 @@ HA S3           ( /var/lib/columnstore/storagemanager/ )  [default: no-ha]
 * `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
 * `-c, --compress TEXT`: Compress backup in X format - Options: [ pigz ].
 * `-P, --parallel INTEGER`: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
-* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)  [default: 03-06-2025]
+* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)  [default: 03-12-2025]
 * `-r, --retention-days INTEGER`: Retain backups created within the last X days, default 0 == keep all backups.  [default: 0]
 * `--help`: Show this message and exit.
 
@@ -155,6 +157,50 @@ $ mcs dbrm_restore [OPTIONS]
 * `-ns, --no-start`: Do not attempt columnstore startup post dbrm_restore.
 * `-sdbk, --skip-dbrm-backup / -no-sdbk, --no-skip-dbrm-backup`: Skip backing up dbrms before restoring.  [default: sdbk]
 * `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: ssm]
+* `--help`: Show this message and exit.
+
+## `mcs cskeys`
+
+This utility generates a random AES encryption key and init vector
+and writes them to disk. The data is written to the file &#x27;.secrets&#x27;,
+in the specified directory. The key and init vector are used by
+the utility &#x27;cspasswd&#x27; to encrypt passwords used in Columnstore
+configuration files, as well as by Columnstore itself to decrypt the
+passwords.
+
+WARNING: Re-creating the file invalidates all existing encrypted
+passwords in the configuration files.
+
+**Usage**:
+
+```console
+$ mcs cskeys [OPTIONS] [DIRECTORY]
+```
+
+**Arguments**:
+
+* `[DIRECTORY]`: The directory where to store the file in.  [default: /var/lib/columnstore]
+
+**Options**:
+
+* `-u, --user TEXT`: Designate the owner of the generated file.  [default: mysql]
+* `--help`: Show this message and exit.
+
+## `mcs cspasswd`
+
+Encrypt a Columnstore plaintext password using the encryption key in
+the key file.
+
+**Usage**:
+
+```console
+$ mcs cspasswd [OPTIONS]
+```
+
+**Options**:
+
+* `--password TEXT`: Password to encrypt/decrypt  [required]
+* `--decrypt`: Decrypt an encrypted password instead.
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`
