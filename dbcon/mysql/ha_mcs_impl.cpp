@@ -5055,6 +5055,19 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
 		string s((const char*)msg.buf(), msg.length());
 		idblog("message length " << msg.length() << ", message <<" << s << ">>");
 		idblog("emsgstr " << emsgStr);
+		std::ostringstream oss;
+		for(int32_t i=0;i<msg.length();i++) {
+			uint8_t c = msg.b()[i];
+			char t[10];
+			if (c < ' ') {
+				sprintf(t, "\\x%02x", c);
+			} else {
+				t[0] = c;
+				t[1] = 0;
+			}
+			oss << t;
+		}
+		idblog("message: <<" << oss.str() << ">>");
           err = true;
         }
 
