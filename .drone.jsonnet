@@ -187,6 +187,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       target: branchp + eventp + '/' + server + '/' + arch + '/' + result,
       delete: 'true',
     },
+    commands: [
+      'echo "Data uploaded to: ' + publish_pkg_url + '"'
+    ],
   },
 
   local regression_tests = if (event == 'cron') then [
