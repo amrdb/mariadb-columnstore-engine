@@ -15,6 +15,18 @@ local platforms_arm = {
   'stable-23.10': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04', 'ubuntu:24.04'],
 };
 
+local platform_priorities = {
+  'rockylinux:8': 1,
+  'rockylinux:9': 1,
+  'debian:11': 0,
+  'debian:12': 0,
+  'ubuntu:20.04': 0,
+  'ubuntu:22.04': 0,
+  'ubuntu:24.04': 0,
+};
+
+local getPriority(platform) = if std.objectHas(platform_priorities, platform) then platform_priorities[platform] else 0;
+
 local any_branch = '**';
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
@@ -135,7 +147,7 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', priority=0) = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -719,6 +731,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   type: 'docker',
   name: std.join(' ', [branch, platform, event, arch, server]),
   platform: { arch: arch },
+  priority: priority,
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
   steps: [
@@ -914,14 +927,14 @@ local FinalPipeline(branch, event) = {
 };
 
 [
-  Pipeline(b, p, e, 'amd64', s)
+  Pipeline(b, p, e, 'amd64', s, getPriority(p))
   for b in std.objectFields(platforms)
   for p in platforms[b]
   for s in servers[b]
   for e in events
 ] +
 [
-  Pipeline(b, p, e, 'arm64', s)
+  Pipeline(b, p, e, 'arm64', s, getPriority(p))
   for b in std.objectFields(platforms_arm)
   for p in platforms_arm[b]
   for s in servers[b]
