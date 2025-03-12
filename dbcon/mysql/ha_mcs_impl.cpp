@@ -133,6 +133,25 @@ using namespace funcexp;
 #include "ha_subquery.h"
 
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
@@ -1382,6 +1401,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     gwi.clauseType = WHERE;
 
+    idblog("calling getSelectPlan()");
     if (getSelectPlan(gwi, select_lex, updateCP, false, false, false, condStack) !=
         0)  //@Bug 3030 Modify the error message for unsupported functions
     {
@@ -5010,6 +5030,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
 
           if (qb != 0)
           {
+		  idblog("qb " << qb);
             err = true;
             // for makejoblist error, stats contains only error code and insert from here
             // because table fetch is not started
@@ -5031,11 +5052,15 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
         }
         else
         {
+		string s((const char*)msg.buf(), msg.length());
+		idblog("message length " << msg.length() << ", message <<" << s << ">>");
+		idblog("emsgstr " << emsgStr);
           err = true;
         }
 
         if (err)
         {
+		idblog("error ret");
           // CS resets error in create_SH() if fallback is enabled
           setError(thd, ER_INTERNAL_ERROR, emsgStr);
           goto internal_error;

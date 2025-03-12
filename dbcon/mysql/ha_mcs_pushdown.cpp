@@ -814,7 +814,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // or unsupported feature.
   ha_columnstore_select_handler* handler;
 
-  if (sel_unit && sel_lex) // partial pushdown of the SELECT_LEX_UNIT
+  if (sel_unit && sel_lex && sel_unit->global_parameters()->order_list.elements == 0) // partial pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex, sel_unit);
   }

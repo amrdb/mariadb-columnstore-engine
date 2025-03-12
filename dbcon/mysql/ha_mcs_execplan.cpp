@@ -7805,6 +7805,7 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
                   bool isSelectHandlerTop, bool isSelectLexUnit, const std::vector<COND*>& condStack)
 {
+	idblog("in getSelectPlan()");
 #ifdef DEBUG_WALK_COND
   cerr << "getSelectPlan()" << endl;
 #endif
@@ -9304,7 +9305,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 
   convertOuterJoinToInnerJoin(&select_lex.top_join_list, gwi.tableOnExprList, gwi.condList,
                               handler->tableOuterJoinMap);
-
+idblog("calling gsp");
   int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
   if (status > 0)
