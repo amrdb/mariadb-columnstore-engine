@@ -419,7 +419,7 @@ class MCSProcessManager:
         for prog_name in cls._get_sorted_progs(is_primary):
             if (
                     cls.dispatcher_name == 'systemd'
-                    and prog_name == MCSProgs.STORAGE_MANAGER.name
+                    and prog_name == MCSProgs.STORAGE_MANAGER.value
             ):
                 # TODO: MCOL-5458
                 logging.info(
@@ -427,11 +427,11 @@ class MCSProcessManager:
                 )
                 continue
             # TODO: additional error handling
-            if prog_name == MCSProgs.CONTROLLER_NODE.name:
+            if prog_name == MCSProgs.CONTROLLER_NODE.value:
                 cls._wait_for_workernodes()
-            if prog_name in (MCSProgs.DML_PROC.name, MCSProgs.DDL_PROC.name):
+            if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
                 cls._wait_for_controllernode()
-            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.name:
+            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
                 logging.debug('Node is in read-only mode, not starting WriteEngine')
                 continue
             if not cls.start(prog_name, is_primary, use_sudo):
@@ -463,7 +463,7 @@ class MCSProcessManager:
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
         for prog_name in cls._get_sorted_progs(True, reverse=True):
-            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.name:
+           if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
                 logging.debug('Node is in read-only mode, not stopping WriteEngine')
                 continue
             if not cls.stop(prog_name, is_primary, use_sudo):
