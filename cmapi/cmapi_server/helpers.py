@@ -1,6 +1,6 @@
 """Module with helpers functions.
 
-TODO: remove NodeConfig usage and move to arguments (eg. nc or root)
+TODO: remove NodeConfig usage and move to arguments (eg. nc or root) 
 """
 
 import asyncio
