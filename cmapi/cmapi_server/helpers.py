@@ -1,6 +1,6 @@
 """Module with helpers functions.
 
-TODO: remove NodeConfig usage and move to arguments (eg. nc or root) 
+TODO: remove NodeConfig usage and move to arguments (eg. nc or root)
 """
 
 import asyncio
@@ -35,7 +35,7 @@ from mcs_node_control.models.node_config import NodeConfig
 
 
 def get_id() -> int:
-    """Generate pseudo random id for transaction.
+    """Generate pseudo-random id for transaction.
 
     :return: id for internal transaction
     :rtype: int
