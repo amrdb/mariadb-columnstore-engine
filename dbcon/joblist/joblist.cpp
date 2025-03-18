@@ -56,6 +56,25 @@ using namespace execplan;
 // 'typeid'
 #endif
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 namespace joblist
 {
 int JobList::fPmsConfigured = 0;
@@ -231,7 +250,9 @@ int JobList::doQuery()
 
     if (!js->delayedRun())
     {
+	    idblog("running " << js->toString());
       js->run();
+	    idblog("ran " << js->toString());
     }
 
     ++iter;

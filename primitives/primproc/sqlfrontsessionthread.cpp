@@ -19,6 +19,25 @@
 #include "primproc.h"
 #include "primitiveserverthreadpools.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 namespace exemgr
 {
 uint64_t SQLFrontSessionThread::getMaxMemPct(uint32_t sessionId)
@@ -195,6 +214,7 @@ void SQLFrontSessionThread::analyzeTableExecute(messageqcpp::ByteStream& bs, job
   execplan::MCSAnalyzeTableExecutionPlan caep;
 
   bs = fIos.read();
+  idblog("unser");
   caep.unserialize(bs);
 
   statementsRunningCount->incr(stmtCounted);
@@ -438,6 +458,7 @@ void SQLFrontSessionThread::operator()()
     new_plan:
       try
       {
+  idblog("unser");
         csep.unserialize(bs);
       }
       catch (logging::IDBExcept& ex)
@@ -448,7 +469,7 @@ void SQLFrontSessionThread::operator()()
         writeCodeAndError(ex.errorCode(), std::string(ex.what()));
         continue;
       }
-
+idblog("csep: " << csep.toString());
       querytele::QueryTeleStats qts;
 
       if (!csep.isInternal() && (csep.queryType() == "SELECT" || csep.queryType() == "INSERT_SELECT"))
@@ -536,7 +557,9 @@ void SQLFrontSessionThread::operator()()
       {
         try  // @bug2244: try/catch around fIos.write() calls responding to makeTupleList
         {
+		idblog("making job list");
           jl = joblist::JobListFactory::makeJobList(&csep, fRm, primitiveServerThreadPools, true, true);
+		idblog("made job list");
           // assign query stats
           jl->queryStats(fStats);
 
@@ -554,6 +577,7 @@ void SQLFrontSessionThread::operator()()
           }
           else
           {
+		  idblog("somefail");
             const std::string emsg = jl->errMsg();
             statementsRunningCount->decr(stmtCounted);
             writeCodeAndError(jl->status(), emsg);
@@ -563,6 +587,7 @@ void SQLFrontSessionThread::operator()()
         }
         catch (std::exception& ex)
         {
+		  idblog("somefail");
           std::ostringstream errMsg;
           errMsg << "ExeMgr: error writing makeJoblist "
                     "response; "
@@ -571,11 +596,13 @@ void SQLFrontSessionThread::operator()()
         }
         catch (...)
         {
+		  idblog("somefail");
           std::ostringstream errMsg;
           errMsg << "ExeMgr: unknown error writing makeJoblist "
                     "response; ";
           throw std::runtime_error(errMsg.str());
         }
+		  idblog("somescc");
 
         if (!usingTuples)
         {
@@ -606,7 +633,9 @@ void SQLFrontSessionThread::operator()()
         }
       }
 
+		  idblog("doing query");
       jl->doQuery();
+		  idblog("done query");
 
       execplan::CalpontSystemCatalog::OID tableOID;
       bool swallowRows = false;
