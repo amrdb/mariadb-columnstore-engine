@@ -219,7 +219,7 @@ class ClusterHandler():
         :return: result of adding node
         :rtype: dict
         """
-        logger.debug(f'Cluster add node command called. Adding node {node}.')
+        logger.info('Cluster add node command called. Adding node %s in %s mode.', node, 'read-only' if read_only else 'read-write')
 
         response = {'timestamp': str(datetime.now())}
         transaction_id = get_id()

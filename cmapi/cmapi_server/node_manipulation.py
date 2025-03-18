@@ -100,15 +100,19 @@ def add_node(
             if not read_only:
                 _add_WES(c_root, pm_num, node)
             else:
+                logging.info("Node is read-only, skipping WES addition")
                 _add_read_only_node(c_root, node)
 
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
-            if rebalance_dbroots and not read_only:
-                _rebalance_dbroots(c_root)
-                _move_primary_node(c_root)
+            if rebalance_dbroots:
+                if not read_only:
+                    _rebalance_dbroots(c_root)
+                    _move_primary_node(c_root)
+                else:
+                    logging.debug("Node is read-only, skipping dbroots rebalancing")
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
