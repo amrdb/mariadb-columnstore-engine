@@ -463,7 +463,7 @@ class MCSProcessManager:
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
         for prog_name in cls._get_sorted_progs(True, reverse=True):
-           if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
+            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
                 logging.debug('Node is in read-only mode, not stopping WriteEngine')
                 continue
             if not cls.stop(prog_name, is_primary, use_sudo):
