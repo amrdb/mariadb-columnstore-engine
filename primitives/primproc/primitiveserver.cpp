@@ -143,7 +143,7 @@ BPPMap bppMap;
 boost::mutex bppLock;
 
 boost::mutex djMutex;                      // lock for djLock, lol.
-std::map<uint64_t, shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
+std::map<uint64_t, boost::shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
 volatile int32_t asyncCounter;
 const int asyncMax = 20;  // current number of asynchronous loads
@@ -1432,7 +1432,7 @@ struct BPPHandler
       return SBPPV();
   }
 
-  inline shared_mutex& getDJLock(uint32_t uniqueID)
+  inline boost::shared_mutex& getDJLock(uint32_t uniqueID)
   {
     boost::mutex::scoped_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
@@ -1440,7 +1440,7 @@ struct BPPHandler
       return *it->second;
     else
     {
-      auto ret = djLock.insert(make_pair(uniqueID, new shared_mutex())).first;
+      auto ret = djLock.insert(make_pair(uniqueID, new boost::shared_mutex())).first;
       return *ret->second;
     }
   }
@@ -1472,7 +1472,7 @@ struct BPPHandler
 
     if (bppv)
     {
-      shared_lock<shared_mutex> lk(getDJLock(uniqueID));
+      boost::shared_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
       bppv->get()[0]->addToJoiner(bs);
       return 0;
     }
@@ -1515,7 +1515,7 @@ struct BPPHandler
       }
     }
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
     for (i = 0; i < bppv->get().size(); i++)
     {
       err = bppv->get()[i]->endOfJoiner();
@@ -1557,7 +1557,7 @@ struct BPPHandler
     bs >> stepID;
     bs >> uniqueID;
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
     boost::mutex::scoped_lock scoped(bppLock);
 
     bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);

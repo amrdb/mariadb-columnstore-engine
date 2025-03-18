@@ -37,8 +37,8 @@ ENDFOREACH()
 
 ExternalProject_Add(external_boost
   PREFIX .boost
-  URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
-  URL_HASH SHA256=a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724
+  URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz
+  URL_HASH SHA256=f55c340aa49763b1925ccf02b2e83f35fdcf634c9d5164a2acb87540173c741d
   CONFIGURE_COMMAND ./bootstrap.sh
   UPDATE_COMMAND ""
   BUILD_COMMAND ./b2 -q ${_b2args}
