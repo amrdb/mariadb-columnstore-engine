@@ -55,13 +55,14 @@ def switch_node_maintenance(
         maintenance_element = etree.SubElement(config_root, 'Maintenance')
     maintenance_element.text = str(maintenance_state).lower()
     node_config.write_config(config_root, filename=output_config_filename)
-    # TODO: probably move publishing to cherrypy.emgine failover channel here?
+    # TODO: probably move publishing to cherrypy.engine failover channel here?
 
 
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    rebalance_dbroots: bool = True
+    rebalance_dbroots: bool = True,
+    read_only: bool = False,
 ):
     """Add node to a cluster.
 
@@ -96,14 +97,16 @@ def add_node(
         if not _replace_localhost(c_root, node):
             pm_num = _add_node_to_PMS(c_root, node)
 
-            if not node_config.is_read_only():
+            if not read_only:
                 _add_WES(c_root, pm_num, node)
+            else:
+                _add_read_only_node(c_root, node)
 
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
-            if rebalance_dbroots:
+            if rebalance_dbroots and not read_only:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
     except Exception:
@@ -368,7 +371,7 @@ def _remove_node(root, node):
     remove node from DesiredNodes, InactiveNodes, and ActiveNodes
     '''
 
-    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
+    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes"), root.find("./ReadOnlyNodes")):
         __remove_helper(n, node)
 
 
@@ -976,6 +979,15 @@ def _add_WES(root, pm_num, node):
     wes_node = etree.SubElement(root, f"pm{pm_num}_WriteEngineServer")
     etree.SubElement(wes_node, "IPAddr").text = node
     etree.SubElement(wes_node, "Port").text = "8630"
+
+
+def _add_read_only_node(root, node) -> None:
+    """Add node name to ReadOnlyNodes if it's not already there"""
+    read_only_nodes = root.find("./ReadOnlyNodes")
+    for n in read_only_nodes.findall("./Node"):
+        if n.text == node:
+            return
+    etree.SubElement(read_only_nodes, "Node").text = node
 
 
 def _add_DBRM_Worker(root, node):

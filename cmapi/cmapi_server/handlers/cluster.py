@@ -196,7 +196,8 @@ class ClusterHandler():
     @staticmethod
     def add_node(
         node: str, config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
+        logger: logging.Logger = logging.getLogger('cmapi_server'),
+        read_only: bool = False,
     ) -> dict:
         """Method to add node to MCS CLuster.
 
@@ -207,6 +208,8 @@ class ClusterHandler():
         :type config: str, optional
         :param logger: logger, defaults to logging.getLogger('cmapi_server')
         :type logger: logging.Logger, optional
+        :param read_only: add node in read-only mode, defaults to False
+        :type read_only: bool, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while adding node
@@ -238,13 +241,18 @@ class ClusterHandler():
         try:
             add_node(
                 node, input_config_filename=config,
-                output_config_filename=config
+                output_config_filename=config,
+                read_only=read_only,
             )
             if not get_dbroots(node, config):
-                add_dbroot(
-                    host=node, input_config_filename=config,
-                    output_config_filename=config
-                )
+                if not read_only:  # Read-only nodes don't own dbroots
+                    add_dbroot(
+                        host=node, input_config_filename=config,
+                        output_config_filename=config
+                    )
+                else:
+                    logger.debug("Node %s is read-only, skipping dbroot addition", node)
+
         except Exception as err:
             rollback_transaction(transaction_id, cs_config_filename=config)
             raise CMAPIBasicError('Error while adding node.') from err

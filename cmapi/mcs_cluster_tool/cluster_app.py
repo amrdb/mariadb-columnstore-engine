@@ -190,12 +190,17 @@ def add(
             'node IP, name or FQDN. '
             'Can be used multiple times to add several nodes at a time.'
         )
+    ),
+    read_only: bool = typer.Option(
+        False,
+        '--read-only',
+        help='Add node (or nodes, if more than one is passed) in read-only mode.'
     )
 ):
     """Add nodes to the Columnstore cluster."""
     result = []
     for node in nodes:
-        result.append(ClusterHandler.add_node(node, logger=logger))
+        result.append(ClusterHandler.add_node(node, logger=logger, read_only=read_only))
     return result
 
 
