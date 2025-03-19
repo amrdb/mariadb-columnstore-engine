@@ -95,6 +95,11 @@ def add_logging_level(level_name, level_num, method_name=None):
     setattr(logging, method_name, partial(logging.log, level_num))
 
 
+def enable_console_logging(logger: logging.Logger) -> None:
+    console_handler = logging.StreamHandler()
+    logger.addHandler(console_handler)
+
+
 def config_cmapi_server_logging():
     # add custom level TRACE only for develop purposes
     # could be activated using API endpoints or cli tool without relaunching
