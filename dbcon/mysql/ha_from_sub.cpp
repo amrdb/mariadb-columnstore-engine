@@ -42,6 +42,25 @@ using namespace execplan;
 
 #include "ha_subquery.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 namespace cal_impl_if
 {
 void derivedTableOptimization(gp_walk_info* gwip, SCSEP& csep)
@@ -431,6 +450,7 @@ SCSEP FromSubQuery::transform()
   csep->derivedTbAlias(fAlias);  // always lower case
   csep->derivedTbView(fGwip.viewName.alias, lower_case_table_names);
 
+  idblog("FROM: calling getSelectPlan");
   if (getSelectPlan(gwi, *fFromSub, csep, false) != 0)
   {
     fGwip.fatalParseError = true;

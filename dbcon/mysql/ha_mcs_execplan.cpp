@@ -223,6 +223,11 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
   {
     gwi.processed.push_back(std::make_pair(from, rc->expressionId()));
   }
+  idblog("push to returned cols: " << rc->toString());
+  if (rc->alias().length() < 1 && from->name.length)
+  {
+    rc->alias(from->name.str);
+  }
   gwi.returnedCols.push_back(rc);
 }
 
@@ -2795,6 +2800,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->derivedTable(sc->tableAlias());
         sc->derivedRefCol(cols[j].get());
         srcp.reset(sc);
+  idblog("push to returned cols: " << srcp->toString());
         gwi.returnedCols.push_back(srcp);
         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
       }
@@ -2838,6 +2844,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->viewName(viewName, lower_case_table_names);
         sc->timeZone(gwi.timeZone);
         srcp.reset(sc);
+  idblog("push to returned cols: " << srcp->toString());
         gwi.returnedCols.push_back(srcp);
         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
       }
@@ -7073,6 +7080,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       // @todo process from subquery
       if (table_ptr->derived)
       {
+	      idblog("select from");
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
         FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
         string alias(table_ptr->alias.str);
@@ -7193,8 +7201,11 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
     }
   }
 
+#define ST(x) (" " #x ": ") << ((x)?"true":"false")
+  idblog(ST(isUnion) << ST(isSelectHandlerTop) << ST(isSelectLexUnit) << ST(select_lex.master_unit()->is_unit_op()));
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
+	  idblog("processing union");
     // MCOL-2178 isUnion member only assigned, never used
     // MIGR::infinidb_vtable.isUnion = true;
     CalpontSelectExecutionPlan::SelectList unionVec;
@@ -7220,11 +7231,14 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         return err;
 
       unionVec.push_back(SCEP(plan));
-
+      idblog("union_distinct " << select_lex.master_unit()->union_distinct << ", sl " << sl);
+      idblog("unionVec size " << unionVec.size());
       // distinct union num
       if (sl == select_lex.master_unit()->union_distinct)
         distUnionNum = unionVec.size();
+
     }
+
 
     csep->unionVec(unionVec);
     csep->distinctUnionNum(distUnionNum);
@@ -8240,6 +8254,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         if (sub->name.length)
           rc->alias(sub->name.str);
 
+  idblog("push to returned cols: " << rc->toString());
         gwi.returnedCols.push_back(SRCP(rc));
 
         break;
@@ -8490,6 +8505,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     if (j == gwi.returnedCols.size())
     {
+  idblog("push to returned cols: " << srcp->toString());
       gwi.returnedCols.push_back(srcp);
       // XXX: SZ: deduplicate here?
       gwi.columnMap.insert(
@@ -8506,6 +8522,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   SRCP minSc;  // min width projected column. for count(*) use
 
   bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
+  idblog("unionSel " << (unionSel ? "true" : "false"));
 
   // Group by list. not valid for union main query
   if (!unionSel)
@@ -8806,6 +8823,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   {
     SQL_I_List<ORDER> order_list = select_lex.order_list;
     ORDER* ordercol = static_cast<ORDER*>(order_list.first);
+    if (!ordercol)
+    {
+      ordercol = static_cast<ORDER*>(select_lex.master_unit()->global_parameters()->order_list.first);
+    }
+    ORDER* startOrderCol = ordercol;
 
     // check if window functions are in order by. InfiniDB process order by list if
     // window functions are involved, either in order by or projection.
@@ -8833,9 +8855,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
 
     // re-visit the first of ordercol list
-    ordercol = static_cast<ORDER*>(order_list.first);
+    ordercol = startOrderCol;
 
     {
+	    idblog("ordercol " << ordercol);
       for (; ordercol; ordercol = ordercol->next)
       {
         ReturnedColumn* rc = NULL;
@@ -8856,6 +8879,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
               ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
           {
+		  idblog("not used");
             continue;
           }
           else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
@@ -8911,6 +8935,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.orderByCols.push_back(SRCP(rc));
       }
     }
+    idblog("gwi.orderByCols size: " << gwi.orderByCols.size());
 
     // make sure columnmap, returnedcols and count(*) arg_list are not empty
     TableMap::iterator tb_iter = gwi.tableMap.begin();
@@ -8984,10 +9009,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       }
 
       if (gwi.returnedCols.empty() && gwi.additionalRetCols.empty() && minSc)
+      {
+  idblog("push to returned cols: " << minSc->toString());
         gwi.returnedCols.push_back(minSc);
+      }
     }
 
-    // ORDER BY translation part
+    // ORDER BY translation part:
+    idblog("gwi subSelectType is " << (gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT ? "MAIN" : "not MAIN"));
     if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
     {
       {
@@ -9120,6 +9149,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->derivedTableList(gwi.derivedTbList);
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
+  idblog("returning csep: " << csep->toString());
   return 0;
 }
 
@@ -9168,6 +9198,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
       sc->timeZone(gwi->timeZone);
       assert(sc);
       boost::shared_ptr<SimpleColumn> spsc(sc);
+  idblog("push to returned cols: " << spsc->toString());
       gwi->returnedCols.push_back(spsc);
       gwi->columnMap.insert(
           CalpontSelectExecutionPlan::ColumnMap::value_type(string(field->field_name.str), spsc));
@@ -9182,6 +9213,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
     SimpleColumn* sc = getSmallestColumn(csc, tn, tan, table, *gwi);
     SRCP srcp(sc);
     gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
+  idblog("push to returned cols: " << srcp->toString());
     gwi->returnedCols.push_back(srcp);
   }
 
@@ -9321,7 +9353,7 @@ idblog("calling gsp");
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
-  idblog("csep: " << csep->toString());
+  idblog("final csep: " << csep->toString());
   return 0;
 }
 
@@ -9485,6 +9517,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
       // @todo process from subquery
       if (table_ptr->derived)
       {
+	      idblog("select from 2");
         String str;
         (table_ptr->derived->first_select())->print(gwi.thd, &str, QT_ORDINARY);
 
@@ -9831,12 +9864,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           // since it must have a single value only.
           if (constCol)
           {
+  idblog("push to returned cols: " << spcc->toString());
             gwi.returnedCols.push_back(spcc);
             gwi.columnMap.insert(
                 CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), spcc));
           }
           else
           {
+  idblog("push to returned cols: " << spsc->toString());
             gwi.returnedCols.push_back(spsc);
             gwi.columnMap.insert(
                 CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), spsc));
@@ -9875,6 +9910,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         // add this agg col to returnedColumnList
         boost::shared_ptr<ReturnedColumn> spac(ac);
+  idblog("push to returned cols: " << spac->toString());
         gwi.returnedCols.push_back(spac);
         // This item could be used in projection or HAVING later.
         gwi.extSelAggColsItems.push_back(item);
@@ -9924,14 +9960,15 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         {
           if (!hasNonSupportItem && !nonConstFunc(ifp) && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
           {
+            if (ifp->name.length)
+              srcp->alias(ifp->name.str);
             if (isUnion || unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT ||
                 parseInfo & SUB_BIT)  //|| select_lex.group_list.elements != 0)
             {
               srcp.reset(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-              gwi.returnedCols.push_back(srcp);
 
-              if (ifp->name.length)
-                srcp->alias(ifp->name.str);
+  idblog("push to returned cols: " << srcp->toString());
+              gwi.returnedCols.push_back(srcp);
 
               continue;
             }
@@ -9939,6 +9976,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             break;
           }
 
+  idblog("push to returned cols: " << srcp->toString());
           gwi.returnedCols.push_back(srcp);
         }
         else  // InfiniDB Non support functions still go through post process for now
@@ -9966,6 +10004,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             if (ifp->name.length)
               cc->alias(ifp->name.str);
 
+  idblog("push to returned cols: " << srcp->toString());
             gwi.returnedCols.push_back(srcp);
 
             // clear the error set by buildFunctionColumn
@@ -10041,6 +10080,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
               if (item->name.length)
                 srcp->alias(item->name.str);
 
+  idblog("push to returned cols: " << srcp->toString());
               gwi.returnedCols.push_back(srcp);
             }
 
@@ -10065,10 +10105,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         else
         {
           SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-          gwi.returnedCols.push_back(srcp);
-
           if (item->name.length)
             srcp->alias(item->name.str);
+  idblog("push to returned cols: " << srcp->toString());
+          gwi.returnedCols.push_back(srcp);
+
         }
 
         break;
@@ -10125,6 +10166,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         if (sub->name.length)
           rc->alias(sub->name.str);
 
+  idblog("push to returned cols: " << rc->toString());
         gwi.returnedCols.push_back(SRCP(rc));
 
         break;
@@ -10160,6 +10202,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
+  idblog("push to returned cols: " << srcp->toString());
         gwi.returnedCols.push_back(srcp);
         break;
       }
@@ -10312,6 +10355,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     if (j == gwi.returnedCols.size())
     {
+  idblog("push to returned cols: " << srcp->toString());
       gwi.returnedCols.push_back(srcp);
       gwi.columnMap.insert(
           CalpontSelectExecutionPlan::ColumnMap::value_type(string(funcFieldVec[i]->field_name.str), srcp));
@@ -10833,7 +10877,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
       }
 
       if (gwi.returnedCols.empty() && gwi.additionalRetCols.empty())
+      {
+  idblog("push to returned cols: " << minSc->toString());
         gwi.returnedCols.push_back(minSc);
+      }
     }
 
     if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
