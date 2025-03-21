@@ -988,9 +988,13 @@ def _add_WES(root, pm_num, node):
 def _add_read_only_node(root, node) -> None:
     """Add node name to ReadOnlyNodes if it's not already there"""
     read_only_nodes = root.find("./ReadOnlyNodes")
-    for n in read_only_nodes.findall("./Node"):
-        if n.text == node:
-            return
+    if read_only_nodes is None:
+        read_only_nodes = etree.SubElement(root, "ReadOnlyNodes")
+    else:
+        for n in read_only_nodes.findall("./Node"):
+            if n.text == node:
+                return
+
     etree.SubElement(read_only_nodes, "Node").text = node
 
 
@@ -1096,7 +1100,7 @@ def _add_node_to_PMS(root, node):
 
     return new_pm_num
 
-def _replace_localhost(root, node):
+def _replace_localhost(root, node) -> bool:
     # if DBRM_Controller/IPAddr is 127.0.0.1 or localhost,
     # then replace all instances, else do nothing.
     controller_host = root.find('./DBRM_Controller/IPAddr')

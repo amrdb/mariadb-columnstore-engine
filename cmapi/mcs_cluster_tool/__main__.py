@@ -47,8 +47,10 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable ver
 def setup_logging(verbose: bool = False) -> None:
     add_logging_level('TRACE', 5)
     dict_config(MCS_CLI_LOG_CONF_PATH)
+
     if verbose:
         enable_console_logging(logging.getLogger())
+        enable_console_logging(logging.getLogger('mcs_cli'))
 
 
 if __name__ == '__main__':
