@@ -7801,6 +7801,19 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
   }
 }
 
+
+bool supportedInGetSelectPlan(SELECT_LEX& sel_lex)
+{
+  // this code is mostly UNION-related.
+  // right now it recognizes a special use case.
+  // refactor if you add more.
+  if (sel_lex.order_list.having || sel_lex.where || sel_lex.prep_where || sel_lex.group_list)
+  {
+    return false;
+  }
+  return true; // supported.
+}
+
 /*@brief  Translates SELECT_LEX into CSEP                  */
 /***********************************************************
  * DESCRIPTION:
