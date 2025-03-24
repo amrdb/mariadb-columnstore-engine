@@ -372,11 +372,16 @@ def __remove_helper(parent_node, node):
 
 def _remove_node(root, node):
     '''
-    remove node from DesiredNodes, InactiveNodes, and ActiveNodes
+    remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadOnlyNodes
     '''
 
-    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes"), root.find("./ReadOnlyNodes")):
+    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
         __remove_helper(n, node)
+
+    read_only_nodes = root.find("./ReadOnlyNodes")
+    if read_only_nodes is not None:
+        for n in read_only_nodes:
+            __remove_helper(n, node)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
